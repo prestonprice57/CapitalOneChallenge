@@ -9,6 +9,6 @@ other excelling students across the US.
 ## How to run
 
 To run this program, you will need to have an Instagram API key and an indico API key, both
-of which are free. Place that in the CapitalOneChallenge.py (the variables for both are defined at the top as globals so it shouldn't be too hard.
+of which are free. Place that in the CapitalOneChallenge.py (the variables for both are defined at the top as globals so it shouldn't be too hard).
 
 You can also change the hashtag if you would like to analyze data for a different tag.
