@@ -12,19 +12,6 @@ import math
 
 # Define number of posts to be returned 
 MAX_COUNT = 100
-# Define name of text file to be written
-OUTPUT_TEXT_FILE = 'post_output.txt'
-
-# Instagram API tokens
-YOUR_CLIENT_ID = 'YOUR_CLIENT_ID'
-YOUR_CLIENT_SECRET = 'YOUR_CLIENT_SECRET'
-YOUR_SECRET_TOKEN = 'YOUR_SECRET_TOKEN'
-
-# Indico API token
-INDICO_API_KEY = 'INDICO_API_KEY'
-
-# Hashtag to search
-HASHTAG = 'CapitalOne'
 
 class InstaPost:
 
@@ -55,14 +42,14 @@ class InstaPost:
 		self.captionSentimentAverage = {
 			'positive': 0,
 			'neutral': 0,
-			'negative': 0
+			'negative':0
 		}
 		# Initiates the secrets and tokens needed for the Instagram API
-		self.client_id = YOUR_CLIENT_ID
-		self.client_secret = YOUR_CLIENT_SECRET
-		self.access_token = YOUR_SECRET_TOKEN
+		self.client_id = 'bec82b4b69cc435998eb2c9f82212fb4'
+		self.client_secret = '6f7cd017a78945afaffcd992840a8fe5'
+		self.access_token = '1147536024.bec82b4.fb48b565d9ad4fe09f64f63d64d4f664'
 		# Token for Indico API
-		indicoio.config.api_key = INDICO_API_KEY
+		indicoio.config.api_key = '61cdd30af4bbdfe5a21b92689a872234'
 
 	# Loops through all recent #CapitalOne posts
 	def loadRecentPosts(self,recent_tags, api):
@@ -81,18 +68,16 @@ class InstaPost:
 			#gets the number of likes of the post
 			likes = tag.like_count
 
-			f = open(OUTPUT_TEXT_FILE, 'a')
-			f.write('Post Number: %d\n' % self.numPosts)
-			f.write('%d likes\n' % likes)
-			f.write("Users Number of Posts: %d\n" % postCount)
-			f.write("Followers: %d\n" % followers)
-			f.write("Following: %d\n" % following)
+			print 'Post Number:', self.numPosts
+			print likes, 'likes'
+			print "Users Number of Posts:", postCount
+			print "Followers:", followers
+			print "Following:", following
+
 			# Checks each word in caption to see if it is positive, neutral or negative and
 			# puts it into a list then calculates its radius based on number of followers
 			if tag.caption is not None:
-				caption = tag.caption.text.encode('ascii','ignore')
-				f.write('%s\n\n' % caption)
-
+				print(tag.caption.text)
 				sentiment = indicoio.sentiment_hq(tag.caption.text)
 				if sentiment >= 0.66:
 					self.positivePosts+=1
@@ -109,13 +94,12 @@ class InstaPost:
 					self.negativeY.append(sentiment*100)
 					self.negativeX.append(self.numPosts%(MAX_COUNT/3))
 					self.negativeRadius = self.calculateRadius(self.negativeRadius,followers)
-			f.close()
-
+					
 			#Use Indico API to calculate image sentiment
 			imageUrl = tag.images['low_resolution'].url
 			self.imageSentiment.append(indicoio.fer(imageUrl))
 
-			print self.numPosts # Print what post you're on to track progress
+			print # separate each post with a new line
 			self.numPosts+=1
 
 	# Calculates the radius of a specific post based on the users amount of followers
@@ -150,12 +134,8 @@ class InstaPost:
 		# Instantiates an Instagram API object using the python-instagram library
 		api = InstagramAPI(client_secret=self.client_secret,access_token=self.access_token) 
 
-		# Overwrites OUTPUT_TEXT_FILE if it exists
-		f=open(OUTPUT_TEXT_FILE, 'w')
-		f.close()
-
 		# Get the recent #capitalone tags
-		recent_tags, next = api.tag_recent_media(tag_name=HASHTAG, count=MAX_COUNT)
+		recent_tags, next = api.tag_recent_media(tag_name="CapitalOne", count=MAX_COUNT)
 		nextCounter = math.ceil(MAX_COUNT/20.0)+1
 		temp, max_tag = next.split("max_tag_id=")
 		# Initialize variables to track number of positive, negative, and neutral posts
@@ -171,24 +151,13 @@ class InstaPost:
 				self.loadRecentPosts(recent_tags,api)
 			# Use pagination to run through more than 20 tags
 			else:
-				recent_tags, next = api.tag_recent_media(tag_name=HASHTAG, max_tag_id=max_tag)
+				recent_tags, next = api.tag_recent_media(tag_name='CapitalOne', max_tag_id=max_tag)
 				temp, max_tag = next.split('max_tag_id=')
 				self.loadRecentPosts(recent_tags,api)
 			counter+=1
 		self.calculateCaptionAndImageSentimentAverage()
 		self.makeGraphs()
-		self.writeTotals()
 
-	# Writes the number of positive, neutral, negative, and total posts to the output file
-	def writeTotals(self):
-		f = open(OUTPUT_TEXT_FILE, 'a')
-		f.write("\nNumber of positive posts: %d  Percentage: %.1f%%\n" % (self.positivePosts, self.captionSentimentAverage['positive']*100))
-		f.write("Number of negative posts: %d  Percentage: %.1f%%\n" % (self.negativePosts, self.captionSentimentAverage['negative']*100))
-		f.write("Number of neutral posts:  %d  Percentage: %.1f%%\n" % (self.neutralPosts, self.captionSentimentAverage['neutral']*100))
-		f.write("Total number of posts:    %d" % self.numPosts)
-		f.close()
-
-	# Uses the bokeh library to make graphs from the data collected
 	def makeGraphs(self):
 
 		# create a new plot with a title and axis labels
@@ -282,5 +251,8 @@ class InstaPost:
 
 insta = InstaPost()
 insta.run()
-
+print "Number of positive posts:", insta.positivePosts, "  Percentage: %.1f%%" % (insta.captionSentimentAverage['positive']*100)
+print "Number of negative posts:", insta.negativePosts, "  Percentage: %.1f%%" % (insta.captionSentimentAverage['negative']*100)
+print "Number of neutral posts: ", insta.neutralPosts,  "  Percentage: %.1f%%" % (insta.captionSentimentAverage['neutral']*100)
+print "Total number of posts:   ", insta.numPosts
 
